@@ -2,7 +2,7 @@ package report
 
 import (
 	"github.com/10Pines/tracker/internal/models"
-	"github.com/10Pines/tracker/storage"
+	"github.com/10Pines/tracker/internal/storage"
 	"log"
 	"time"
 )

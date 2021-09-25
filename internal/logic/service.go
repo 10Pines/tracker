@@ -2,7 +2,7 @@ package logic
 
 import (
 	"github.com/10Pines/tracker/internal/models"
-	"github.com/10Pines/tracker/storage"
+	"github.com/10Pines/tracker/internal/storage"
 )
 
 type Logic struct {

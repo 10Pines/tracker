@@ -5,20 +5,19 @@ import (
 	"github.com/10Pines/tracker/internal/logic"
 	"github.com/10Pines/tracker/internal/reporter"
 	"github.com/10Pines/tracker/internal/schedule"
-	"github.com/10Pines/tracker/storage"
+	"github.com/10Pines/tracker/internal/storage"
 	"log"
 )
 
 func main() {
-	dbPath := storage.DBPath()
-	log.Printf("db attached at %s", dbPath)
-	db := storage.MustNewSQL(dbPath)
+	config := mustParseConfig()
 
-	l := logic.New(db)
+	db := storage.MustNewSQL(config.dbPath)
 
 	go schedule.PeriodicallyRunReport(db, reporter.ConsoleReporter)
 
-	router := http.NewRouter(l)
+	l := logic.New(db)
+	router := http.NewRouter(l, config.apiKey)
 
 	addr := ":8080"
 	log.Printf("starting server on %s", addr)

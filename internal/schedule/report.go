@@ -3,7 +3,7 @@ package schedule
 import (
 	"github.com/10Pines/tracker/internal/report"
 	"github.com/10Pines/tracker/internal/reporter"
-	"github.com/10Pines/tracker/storage"
+	"github.com/10Pines/tracker/internal/storage"
 	"log"
 	"time"
 )

@@ -5,8 +5,6 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"log"
-	"os"
-	"path"
 	"time"
 )
 
@@ -22,13 +20,9 @@ type SQL struct {
 	*gorm.DB
 }
 
-func DBPath() string {
-	dbPath := os.Getenv("DB_PATH")
-	return path.Join(dbPath, "tracker.db")
-}
-
-func MustNewSQL(path string) DB {
-	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+func MustNewSQL(dbPath string) DB {
+	log.Printf("db attached at %s", dbPath)
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("cannot connect to db: %v", err)
 	}
