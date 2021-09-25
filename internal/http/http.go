@@ -17,14 +17,17 @@ type createTask struct {
 
 func NewRouter(l logic.Logic, key string) *gin.Engine {
 	router := gin.Default()
-	router.Use(gin.Logger())
 
 	router.GET("/healthz/ready", func(g *gin.Context) {
 		g.Status(200)
 	})
 
 	tasks := router.Group("/api/tasks")
-	tasks.Use(apiKeyRequired(key))
+
+	tasks.Use(
+		gin.Logger(),
+		apiKeyRequired(key),
+	)
 
 	tasks.POST("", func(g *gin.Context) {
 		var params createTask
