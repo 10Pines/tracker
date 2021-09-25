@@ -15,11 +15,16 @@ type createTask struct {
 	Tolerance  int    `json:"tolerance" validate:"gte=0"`
 }
 
-func NewRouter(l logic.Logic) *gin.Engine {
+func NewRouter(l logic.Logic, key string) *gin.Engine {
 	router := gin.Default()
 	router.Use(gin.Logger())
 
+	router.GET("/healthz/ready", func(g *gin.Context) {
+		g.Status(200)
+	})
+
 	tasks := router.Group("/api/tasks")
+	tasks.Use(apiKeyRequired(key))
 
 	tasks.POST("", func(g *gin.Context) {
 		var params createTask
