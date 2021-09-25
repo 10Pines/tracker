@@ -62,7 +62,7 @@ func NewRouter(l logic.Logic, key string) *gin.Engine {
 			g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		g.JSON(http.StatusOK, gin.H{"id": job.ID})
+		g.JSON(http.StatusCreated, gin.H{"id": job.ID})
 	})
 	return router
 }

@@ -8,12 +8,21 @@ import (
 )
 
 func main() {
+	key := mustGetApiKey()
 	taskID := mustParseTaskID()
-	t := tracker.New()
+	t := tracker.New(key)
 	err := t.TrackJob(taskID)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func mustGetApiKey() string {
+	key, ok := os.LookupEnv("API_KEY")
+	if !ok {
+		log.Fatal("API_KEY is missing")
+	}
+	return key
 }
 
 func mustParseTaskID() uint {

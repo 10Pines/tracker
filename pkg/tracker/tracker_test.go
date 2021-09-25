@@ -1,6 +1,7 @@
 package tracker
 
 import (
+	trackerhttp "github.com/10Pines/tracker/internal/http"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -12,12 +13,17 @@ type fakeClient struct {
 
 func (c *fakeClient) Do(req *http.Request) (*http.Response, error) {
 	c.reqs = append(c.reqs, req)
-	return nil, nil
+	return &http.Response{StatusCode: http.StatusCreated}, nil
+}
+
+func newTestTracker(opts ...Option) (*Tracker, *fakeClient) {
+	fakeHttp := &fakeClient{}
+	tracker := New("test", append(opts, OptionHttpClient(fakeHttp))...)
+	return tracker, fakeHttp
 }
 
 func TestTrackerCustomHttpClient(t *testing.T) {
-	fakeHttp := &fakeClient{}
-	tracker := New(OptionHttpClient(fakeHttp))
+	tracker, fakeHttp := newTestTracker()
 
 	err := tracker.TrackJob(1)
 	assert.NoError(t, err)
@@ -26,8 +32,7 @@ func TestTrackerCustomHttpClient(t *testing.T) {
 }
 
 func TestTrackerDefaultUri(t *testing.T) {
-	fakeHttp := &fakeClient{}
-	tracker := New(OptionHttpClient(fakeHttp))
+	tracker, fakeHttp := newTestTracker()
 
 	err := tracker.TrackJob(1)
 	assert.NoError(t, err)
@@ -36,8 +41,7 @@ func TestTrackerDefaultUri(t *testing.T) {
 }
 
 func TestTrackerCustomUri(t *testing.T) {
-	fakeHttp := &fakeClient{}
-	tracker := New(OptionHttpClient(fakeHttp), OptionUri("https://test.com"))
+	tracker, fakeHttp := newTestTracker(OptionUri("https://test.com"))
 
 	err := tracker.TrackJob(1)
 	assert.NoError(t, err)
@@ -46,11 +50,19 @@ func TestTrackerCustomUri(t *testing.T) {
 }
 
 func TestTrackerTrackJobURI(t *testing.T) {
-	fakeHttp := &fakeClient{}
-	tracker := New(OptionHttpClient(fakeHttp))
+	tracker, fakeHttp := newTestTracker()
 
 	err := tracker.TrackJob(1)
 	assert.NoError(t, err)
 
-	assert.Contains(t, fakeHttp.reqs[0].URL.String(), "/tasks/1/jobs")
+	assert.Contains(t, fakeHttp.reqs[0].URL.String(), "/api/tasks/1/jobs")
+}
+
+func TestTrackerTrackJobApiKey(t *testing.T) {
+	tracker, fakeHttp := newTestTracker()
+
+	err := tracker.TrackJob(1)
+	assert.NoError(t, err)
+
+	assert.Contains(t, fakeHttp.reqs[0].Header.Get(trackerhttp.ApiKeyHeader), "test")
 }
