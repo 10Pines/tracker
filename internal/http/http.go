@@ -16,7 +16,9 @@ type createTask struct {
 }
 
 func NewRouter(l logic.Logic, key string) *gin.Engine {
-	router := gin.Default()
+	router := gin.New()
+
+	router.Use(requestLogger())
 
 	router.GET("/healthz/ready", func(g *gin.Context) {
 		g.Status(200)
@@ -24,10 +26,7 @@ func NewRouter(l logic.Logic, key string) *gin.Engine {
 
 	tasks := router.Group("/api/tasks")
 
-	tasks.Use(
-		gin.Logger(),
-		apiKeyRequired(key),
-	)
+	tasks.Use(apiKeyRequired(key))
 
 	tasks.POST("", func(g *gin.Context) {
 		var params createTask
@@ -65,6 +64,16 @@ func NewRouter(l logic.Logic, key string) *gin.Engine {
 		g.JSON(http.StatusCreated, gin.H{"id": job.ID})
 	})
 	return router
+}
+
+func requestLogger() gin.HandlerFunc {
+	loggerConfig := gin.LoggerConfig{
+		SkipPaths: []string{
+			"/healthz/ready",
+		},
+	}
+	requestLogger := gin.LoggerWithConfig(loggerConfig)
+	return requestLogger
 }
 
 func extractID(g *gin.Context, paramName string) (uint, error) {
