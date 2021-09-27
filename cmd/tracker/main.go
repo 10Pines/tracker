@@ -26,10 +26,10 @@ func mustGetApiKey() string {
 }
 
 func mustParseTaskID() uint {
-	if len(os.Args) != 2 {
-		log.Fatal("task id is expected as only argument")
+	if len(os.Args) != 3 || os.Args[1] != "track" {
+		log.Fatal("expected format is 'track $TASK_ID'")
 	}
-	stringID := os.Args[1]
+	stringID := os.Args[2]
 	taskID, err := strconv.ParseInt(stringID, 10, 32)
 	if err != nil {
 		log.Fatal(err)

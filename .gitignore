@@ -4,3 +4,5 @@ tracker
 server
 !cmd/*/
 !pkg/*/
+.DS_Store
+dist
