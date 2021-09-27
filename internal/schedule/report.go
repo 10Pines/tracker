@@ -11,9 +11,9 @@ import (
 )
 
 func PeriodicallyRunReport(db *gorm.DB, reporter reporter.Reporter) {
-	//wait := timeUntilNextReport(time.Now())
-	//time.Sleep(wait)
-	ticker := time.Tick(10 * time.Second)
+	wait := timeUntilNextReport(time.Now())
+	time.Sleep(wait)
+	ticker := time.Tick(24 * time.Hour)
 	for {
 		select {
 		case <-ticker:
