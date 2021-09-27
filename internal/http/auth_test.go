@@ -1,11 +1,14 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/10Pines/tracker/pkg/tracker"
 )
 
 func TestApiKeyRequired(t *testing.T) {
@@ -28,12 +31,12 @@ func TestApiKeyRequired(t *testing.T) {
 		},
 		{
 			name:           "incorrect value",
-			headers:        map[string]string{ApiKeyHeader: "test"},
+			headers:        map[string]string{tracker.ApiKeyHeader: "test"},
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
 			name:           "correct header",
-			headers:        map[string]string{ApiKeyHeader: apiKey},
+			headers:        map[string]string{tracker.ApiKeyHeader: apiKey},
 			expectedStatus: http.StatusOK,
 		},
 	}

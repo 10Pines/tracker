@@ -2,9 +2,10 @@ package reporter
 
 import (
 	"fmt"
-	"github.com/10Pines/tracker/internal/report"
 	"log"
 	"time"
+
+	"github.com/10Pines/tracker/internal/report"
 )
 
 func ConsoleReporter(report report.Report) error {
@@ -19,14 +20,14 @@ func ConsoleReporter(report report.Report) error {
 
 func status(taskStatus report.TaskStatus) string {
 	if !taskStatus.Ready {
-		return fmt.Sprintf("INSUFFICIENT_DATAPOINTS[%d/%d]", taskStatus.JobCount, taskStatus.Task.Datapoints)
+		return fmt.Sprintf("INSUFFICIENT_DATAPOINTS[%d/%d]", taskStatus.BackupCount, taskStatus.Task.Datapoints)
 	}
-	ok := taskStatus.Expected <= taskStatus.JobCount
+	ok := taskStatus.Expected <= taskStatus.BackupCount
 	var label string
 	if ok {
 		label = "OK"
 	} else {
 		label = "ERR"
 	}
-	return fmt.Sprintf("%s[%d/%d Tolerance=%d]", label, taskStatus.JobCount, taskStatus.Task.Datapoints, taskStatus.Task.Tolerance)
+	return fmt.Sprintf("%s[%d/%d Tolerance=%d]", label, taskStatus.BackupCount, taskStatus.Task.Datapoints, taskStatus.Task.Tolerance)
 }

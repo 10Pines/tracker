@@ -1,8 +1,6 @@
 package models
 
-type JobStatus = int
-
-type Job struct {
+type Backup struct {
 	Model
 	TaskID uint
 	Task   Task

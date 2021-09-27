@@ -1,10 +1,12 @@
 package tracker
 
 import (
-	trackerhttp "github.com/10Pines/tracker/internal/http"
-	"github.com/stretchr/testify/assert"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type fakeClient struct {
@@ -25,7 +27,7 @@ func newTestTracker(opts ...Option) (*Tracker, *fakeClient) {
 func TestTrackerCustomHttpClient(t *testing.T) {
 	tracker, fakeHttp := newTestTracker()
 
-	err := tracker.TrackJob(1)
+	err := tracker.CreateBackup("payroll weekly backup")
 	assert.NoError(t, err)
 
 	assert.Len(t, fakeHttp.reqs, 1)
@@ -34,7 +36,7 @@ func TestTrackerCustomHttpClient(t *testing.T) {
 func TestTrackerDefaultUri(t *testing.T) {
 	tracker, fakeHttp := newTestTracker()
 
-	err := tracker.TrackJob(1)
+	err := tracker.CreateBackup("payroll weekly backup")
 	assert.NoError(t, err)
 
 	assert.Contains(t, fakeHttp.reqs[0].URL.String(), defaultUri)
@@ -43,26 +45,42 @@ func TestTrackerDefaultUri(t *testing.T) {
 func TestTrackerCustomUri(t *testing.T) {
 	tracker, fakeHttp := newTestTracker(OptionUri("https://test.com"))
 
-	err := tracker.TrackJob(1)
+	err := tracker.CreateBackup("payroll weekly backup")
 	assert.NoError(t, err)
 
 	assert.Contains(t, fakeHttp.reqs[0].URL.String(), "https://test.com")
 }
 
-func TestTrackerTrackJobURI(t *testing.T) {
+func TestTrackerCreateBackupURI(t *testing.T) {
 	tracker, fakeHttp := newTestTracker()
 
-	err := tracker.TrackJob(1)
+	err := tracker.CreateBackup("payroll weekly backup")
 	assert.NoError(t, err)
 
-	assert.Contains(t, fakeHttp.reqs[0].URL.String(), "/api/tasks/1/jobs")
+	assert.Contains(t, fakeHttp.reqs[0].URL.String(), "/api/backup")
 }
 
-func TestTrackerTrackJobApiKey(t *testing.T) {
+func TestTrackerCreateBackupTaskName(t *testing.T) {
 	tracker, fakeHttp := newTestTracker()
 
-	err := tracker.TrackJob(1)
+	err := tracker.CreateBackup("payroll weekly backup")
 	assert.NoError(t, err)
 
-	assert.Contains(t, fakeHttp.reqs[0].Header.Get(trackerhttp.ApiKeyHeader), "test")
+	reqBody, err := ioutil.ReadAll(fakeHttp.reqs[0].Body)
+	assert.NoError(t, err)
+
+	var create CreateBackup
+	err = json.Unmarshal(reqBody, &create)
+	assert.NoError(t, err)
+
+	assert.Equal(t, create.TaskName, "payroll weekly backup")
+}
+
+func TestTrackerCreateBackupApiKey(t *testing.T) {
+	tracker, fakeHttp := newTestTracker()
+
+	err := tracker.CreateBackup("payroll weekly backup")
+	assert.NoError(t, err)
+
+	assert.Contains(t, fakeHttp.reqs[0].Header.Get(ApiKeyHeader), "test")
 }

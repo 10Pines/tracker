@@ -1,17 +1,19 @@
 package schedule
 
 import (
-	"github.com/10Pines/tracker/internal/report"
-	"github.com/10Pines/tracker/internal/reporter"
-	"github.com/10Pines/tracker/internal/storage"
 	"log"
 	"time"
+
+	"gorm.io/gorm"
+
+	"github.com/10Pines/tracker/internal/report"
+	"github.com/10Pines/tracker/internal/reporter"
 )
 
-func PeriodicallyRunReport(db storage.DB, reporter reporter.Reporter) {
-	wait := timeUntilNextReport(time.Now())
-	time.Sleep(wait)
-	ticker := time.Tick(24 * time.Hour)
+func PeriodicallyRunReport(db *gorm.DB, reporter reporter.Reporter) {
+	//wait := timeUntilNextReport(time.Now())
+	//time.Sleep(wait)
+	ticker := time.Tick(10 * time.Second)
 	for {
 		select {
 		case <-ticker:

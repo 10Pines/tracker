@@ -1,12 +1,12 @@
 package http
 
 import (
-	"errors"
-	"github.com/10Pines/tracker/internal/logic"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"net/http"
-	"strconv"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/10Pines/tracker/internal/logic"
+	"github.com/10Pines/tracker/pkg/tracker"
 )
 
 type createTask struct {
@@ -17,18 +17,32 @@ type createTask struct {
 
 func NewRouter(l logic.Logic, key string) *gin.Engine {
 	router := gin.New()
-
 	router.Use(requestLogger())
 
 	router.GET("/healthz/ready", func(g *gin.Context) {
 		g.Status(200)
 	})
 
-	tasks := router.Group("/api/tasks")
+	api := router.Group("/api")
+	api.Use(apiKeyRequired(key))
 
-	tasks.Use(apiKeyRequired(key))
+	api.POST("/backups", func(g *gin.Context) {
+		var params tracker.CreateBackup
+		if err := g.BindJSON(&params); err != nil {
+			return
+		}
+		create := logic.CreateBackup{
+			TaskName: params.TaskName,
+		}
+		backup, err := l.CreateBackup(create)
+		if err != nil {
+			g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		g.JSON(http.StatusCreated, gin.H{"id": backup.ID})
+	})
 
-	tasks.POST("", func(g *gin.Context) {
+	api.POST("/tasks", func(g *gin.Context) {
 		var params createTask
 		if err := g.BindJSON(&params); err != nil {
 			return
@@ -45,24 +59,6 @@ func NewRouter(l logic.Logic, key string) *gin.Engine {
 		}
 		g.JSON(http.StatusCreated, gin.H{"id": task.ID})
 	})
-
-	tasks.POST("/:taskID/jobs", func(g *gin.Context) {
-		taskID, err := extractID(g, "taskID")
-		if err != nil {
-			g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		job, err := l.CreateJob(taskID)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			g.JSON(http.StatusNotFound, gin.H{})
-			return
-		}
-		if err != nil {
-			g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		g.JSON(http.StatusCreated, gin.H{"id": job.ID})
-	})
 	return router
 }
 
@@ -74,10 +70,4 @@ func requestLogger() gin.HandlerFunc {
 	}
 	requestLogger := gin.LoggerWithConfig(loggerConfig)
 	return requestLogger
-}
-
-func extractID(g *gin.Context, paramName string) (uint, error) {
-	param := g.Param(paramName)
-	id, err := strconv.ParseUint(param, 10, 32)
-	return uint(id), err
 }

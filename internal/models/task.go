@@ -2,16 +2,17 @@ package models
 
 type Task struct {
 	Model
-	Name       string
+	Name       string `gorm:"uniqueIndex"`
 	Tolerance  int
 	Datapoints int
-	Jobs       []Job
+	Backups    []Backup
 }
 
-func (t *Task) NewJob() Job {
-	job := Job{}
-	t.Jobs = append(t.Jobs, job)
-	return job
+func (t *Task) CreateBackup() Backup {
+	backup := Backup{}
+	backup.TaskID = t.ID
+	t.Backups = append(t.Backups, backup)
+	return backup
 }
 
 func NewTask(name string, datapoints, tolerance int) Task {

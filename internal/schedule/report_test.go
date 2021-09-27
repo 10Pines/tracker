@@ -1,10 +1,11 @@
 package schedule
 
 import (
-	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTimeTillNextRun(t *testing.T) {

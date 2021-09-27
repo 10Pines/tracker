@@ -1,10 +1,12 @@
 package report
 
 import (
-	"github.com/10Pines/tracker/internal/models"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/10Pines/tracker/internal/models"
 )
 
 func TestTaskStatusReady(t *testing.T) {

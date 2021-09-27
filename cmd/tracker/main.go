@@ -1,17 +1,17 @@
 package main
 
 import (
-	"github.com/10Pines/tracker/pkg/tracker"
 	"log"
 	"os"
-	"strconv"
+
+	"github.com/10Pines/tracker/pkg/tracker"
 )
 
 func main() {
-	key := mustGetApiKey()
-	taskID := mustParseTaskID()
-	t := tracker.New(key)
-	err := t.TrackJob(taskID)
+	apiKey := mustGetApiKey()
+	taskName := mustParseTaskName()
+	t := tracker.New(apiKey, tracker.OptionUri("http://localhost:8080/api"))
+	err := t.CreateBackup(taskName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,14 +25,13 @@ func mustGetApiKey() string {
 	return key
 }
 
-func mustParseTaskID() uint {
+func mustParseTaskName() string {
 	if len(os.Args) != 3 || os.Args[1] != "track" {
-		log.Fatal("expected format is 'track $TASK_ID'")
+		log.Fatal("expected format is 'track $TASK_NAME'")
 	}
-	stringID := os.Args[2]
-	taskID, err := strconv.ParseInt(stringID, 10, 32)
-	if err != nil {
-		log.Fatal(err)
+	taskName := os.Args[2]
+	if taskName == "" {
+		log.Fatal("task name is missing")
 	}
-	return uint(taskID)
+	return taskName
 }

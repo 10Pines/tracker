@@ -2,14 +2,20 @@ package tracker
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
-	trackerhttp "github.com/10Pines/tracker/internal/http"
 	"io/ioutil"
 	"net/http"
 )
 
+const ApiKeyHeader = "X-API-KEY"
+
 const defaultUri = "https://tracker.10pines.com/api"
+
+type CreateBackup struct {
+	TaskName string `json:"taskName"`
+}
 
 type httpClient interface {
 	Do(*http.Request) (*http.Response, error)
@@ -49,11 +55,17 @@ func New(key string, options ...Option) *Tracker {
 	return t
 }
 
-func (t Tracker) TrackJob(taskID uint) error {
+func (t Tracker) CreateBackup(taskName string) error {
+	url := fmt.Sprintf("%s/backups", t.uri)
+	create := CreateBackup{TaskName: taskName}
 	var body bytes.Buffer
-	url := fmt.Sprintf("%s/tasks/%d/jobs", t.uri, taskID)
+	encoder := json.NewEncoder(&body)
+	err := encoder.Encode(&create)
+	if err != nil {
+		return err
+	}
 	req, err := http.NewRequest(http.MethodPost, url, &body)
-	req.Header.Set(trackerhttp.ApiKeyHeader, t.apiKey)
+	req.Header.Set(ApiKeyHeader, t.apiKey)
 	if err != nil {
 		return err
 	}

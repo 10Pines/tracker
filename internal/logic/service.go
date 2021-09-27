@@ -1,12 +1,13 @@
 package logic
 
 import (
+	"gorm.io/gorm"
+
 	"github.com/10Pines/tracker/internal/models"
-	"github.com/10Pines/tracker/internal/storage"
 )
 
 type Logic struct {
-	db storage.DB
+	db *gorm.DB
 }
 
 type CreateTask struct {
@@ -15,31 +16,38 @@ type CreateTask struct {
 	Datapoints int
 }
 
-func New(db storage.DB) Logic {
+type CreateBackup struct {
+	TaskName string
+}
+
+func New(db *gorm.DB) Logic {
 	return Logic{
 		db,
 	}
 }
 
-func (o Logic) CreateTask(create CreateTask) (models.Task, error) {
+func (l Logic) CreateTask(create CreateTask) (models.Task, error) {
 	task := models.NewTask(create.Name, create.Datapoints, create.Tolerance)
-	err := o.db.CreateTask(&task)
+	err := createTask(l.db, &task)
 	if err != nil {
 		return models.Task{}, err
 	}
 	return task, nil
 }
 
-func (o Logic) CreateJob(taskID uint) (models.Job, error) {
-	var task models.Task
-	err := o.db.FindTaskByID(taskID, &task)
+func (l Logic) CreateBackup(create CreateBackup) (models.Backup, error) {
+	var backup models.Backup
+	err := l.db.Transaction(func(tx *gorm.DB) error {
+		task, err := findByTaskNameOrCreate(tx, create.TaskName)
+		if err != nil {
+			return err
+		}
+		backup = task.CreateBackup()
+		err = saveBackup(tx, &backup)
+		return err
+	})
 	if err != nil {
-		return models.Job{}, err
+		return models.Backup{}, err
 	}
-	job := task.NewJob()
-	err = o.db.SaveTask(&task)
-	if err != nil {
-		return models.Job{}, err
-	}
-	return job, nil
+	return backup, nil
 }

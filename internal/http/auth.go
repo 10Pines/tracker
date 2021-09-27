@@ -1,15 +1,16 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
-)
 
-const ApiKeyHeader = "X-API-KEY"
+	"github.com/gin-gonic/gin"
+
+	"github.com/10Pines/tracker/pkg/tracker"
+)
 
 func apiKeyRequired(key string) gin.HandlerFunc {
 	return func(g *gin.Context) {
-		if g.GetHeader(ApiKeyHeader) != key {
+		if g.GetHeader(tracker.ApiKeyHeader) != key {
 			g.AbortWithStatus(http.StatusUnauthorized)
 		}
 	}

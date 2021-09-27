@@ -1,11 +1,13 @@
 package http
 
 import (
-	"github.com/10Pines/tracker/internal/logic"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/10Pines/tracker/internal/logic"
 )
 
 func TestHealthEndpoints(t *testing.T) {

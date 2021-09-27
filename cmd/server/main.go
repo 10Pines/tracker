@@ -1,18 +1,17 @@
 package main
 
 import (
+	"log"
+
 	"github.com/10Pines/tracker/internal/http"
 	"github.com/10Pines/tracker/internal/logic"
 	"github.com/10Pines/tracker/internal/reporter"
 	"github.com/10Pines/tracker/internal/schedule"
-	"github.com/10Pines/tracker/internal/storage"
-	"log"
 )
 
 func main() {
 	config := mustParseConfig()
-
-	db := storage.MustNewSQL(config.dbPath)
+	db := mustNewSQL(config.dbPath)
 
 	go schedule.PeriodicallyRunReport(db, reporter.ConsoleReporter)
 

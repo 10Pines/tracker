@@ -2,9 +2,11 @@ package reporter
 
 import (
 	"fmt"
-	"github.com/10Pines/tracker/internal/report"
-	"github.com/slack-go/slack"
 	"time"
+
+	"github.com/slack-go/slack"
+
+	"github.com/10Pines/tracker/internal/report"
 )
 
 type SlackReporter struct {
