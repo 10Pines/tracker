@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/10Pines/tracker/internal/report"
-	"github.com/10Pines/tracker/internal/reporter"
+	"github.com/10Pines/tracker/v2/internal/report"
+	"github.com/10Pines/tracker/v2/internal/reporter"
 )
 
 func PeriodicallyRunReport(db *gorm.DB, reporter reporter.Reporter) {

@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/10Pines/tracker/pkg/tracker"
+	"github.com/10Pines/tracker/v2/pkg/tracker"
 )
 
 func main() {

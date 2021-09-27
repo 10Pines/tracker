@@ -8,7 +8,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/10Pines/tracker/internal/models"
+	"github.com/10Pines/tracker/v2/internal/models"
 )
 
 type config struct {

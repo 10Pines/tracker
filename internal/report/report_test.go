@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/10Pines/tracker/internal/models"
+	"github.com/10Pines/tracker/v2/internal/models"
 )
 
 func TestTaskStatusReady(t *testing.T) {

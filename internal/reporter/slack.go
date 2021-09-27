@@ -6,7 +6,7 @@ import (
 
 	"github.com/slack-go/slack"
 
-	"github.com/10Pines/tracker/internal/report"
+	"github.com/10Pines/tracker/v2/internal/report"
 )
 
 type SlackReporter struct {

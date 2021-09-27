@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/10Pines/tracker/internal/logic"
+	"github.com/10Pines/tracker/v2/internal/logic"
 )
 
 func TestHealthEndpoints(t *testing.T) {

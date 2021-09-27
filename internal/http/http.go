@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/10Pines/tracker/internal/logic"
-	"github.com/10Pines/tracker/pkg/tracker"
+	"github.com/10Pines/tracker/v2/pkg/tracker"
+
+	"github.com/10Pines/tracker/v2/internal/logic"
 )
 
 type createTask struct {

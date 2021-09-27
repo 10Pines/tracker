@@ -3,7 +3,7 @@ package logic
 import (
 	"gorm.io/gorm"
 
-	"github.com/10Pines/tracker/internal/models"
+	"github.com/10Pines/tracker/v2/internal/models"
 )
 
 type Logic struct {

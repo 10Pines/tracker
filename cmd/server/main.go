@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/10Pines/tracker/internal/http"
-	"github.com/10Pines/tracker/internal/logic"
-	"github.com/10Pines/tracker/internal/reporter"
-	"github.com/10Pines/tracker/internal/schedule"
+	"github.com/10Pines/tracker/v2/internal/http"
+	"github.com/10Pines/tracker/v2/internal/logic"
+	"github.com/10Pines/tracker/v2/internal/reporter"
+	"github.com/10Pines/tracker/v2/internal/schedule"
 )
 
 func main() {

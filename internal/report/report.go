@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/10Pines/tracker/internal/logic"
-	"github.com/10Pines/tracker/internal/models"
+	"github.com/10Pines/tracker/v2/internal/logic"
+	"github.com/10Pines/tracker/v2/internal/models"
 )
 
 const days = 24 * time.Hour
