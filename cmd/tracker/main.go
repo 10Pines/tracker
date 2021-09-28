@@ -10,7 +10,7 @@ import (
 func main() {
 	apiKey := mustGetApiKey()
 	taskName := mustParseTaskName()
-	t := tracker.New(apiKey, tracker.OptionUri("http://localhost:8080/api"))
+	t := tracker.New(apiKey)
 	err := t.CreateBackup(taskName)
 	if err != nil {
 		log.Fatal(err)
