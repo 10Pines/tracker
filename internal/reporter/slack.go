@@ -12,8 +12,15 @@ import (
 
 const (
 	shortISO = "2006-01-02 15:04"
-	danger   = "#fa352a"
+	danger   = "#FF5248"
 	rickroll = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+)
+
+type statusEmoji string
+
+const (
+	ok  statusEmoji = ":zorzal-tarea-ok:"
+	nok             = ":zorzal-tarea-error:"
 )
 
 type slackReporter struct {
@@ -61,8 +68,8 @@ func failedTasksAttachments(report report.Report) []slack.Attachment {
 	for i, taskStatus := range report.Statuses() {
 		if !taskStatus.IsOK() {
 			failedCount := taskStatus.Expected - taskStatus.BackupCount
-			msg := fmt.Sprintf(" *%s*\n Falló %d veces en los últimos %d reportes. Tolerancia %d", taskStatus.Task.Name, failedCount, taskStatus.Task.Datapoints, taskStatus.Task.Tolerance)
-			viewMoreBtn := slack.NewButtonBlockElement(fmt.Sprintf("view-more-%d", i), "asd", slack.NewTextBlockObject(slack.PlainTextType, "Mas info", false, false))
+			msg := fmt.Sprintf(" *%s*\n Falló %d veces en los últimos %d reportes.", taskStatus.Task.Name, failedCount, taskStatus.Task.Datapoints)
+			viewMoreBtn := slack.NewButtonBlockElement(fmt.Sprintf("view-more-%d", i), "", slack.NewTextBlockObject(slack.PlainTextType, "Mas info", false, false))
 			viewMoreBtn.URL = rickroll
 			viewMoreBtn.WithStyle(slack.StylePrimary)
 			moreInfo := slack.NewAccessory(viewMoreBtn)
@@ -80,13 +87,20 @@ func failedTasksAttachments(report report.Report) []slack.Attachment {
 
 func footer(r report.Report) slack.Block {
 	var msg strings.Builder
-	msg.WriteString("Tareas reportadas\n")
+	msg.WriteString("Tareas observadas:\n")
 	for _, taskStatus := range r.Statuses() {
+		em := taskEmoji(taskStatus)
 		ts := taskStatus.Task.CreatedAt.Format(shortISO)
-		msg.WriteString(ts)
-		msg.WriteString(" ")
-		msg.WriteString(fmt.Sprintf("*%s*\n", taskStatus.Task.Name))
+		msg.WriteString(fmt.Sprintf("%s %s *%s*\n", em, ts, taskStatus.Task.Name))
 	}
 	tasks := slack.NewTextBlockObject(slack.MarkdownType, msg.String(), false, false)
 	return slack.NewSectionBlock(tasks, nil, nil, slack.SectionBlockOptionBlockID("footer"))
+}
+
+func taskEmoji(taskStatus report.TaskStatus) statusEmoji {
+	if taskStatus.IsOK() {
+		return ok
+	} else {
+		return nok
+	}
 }
