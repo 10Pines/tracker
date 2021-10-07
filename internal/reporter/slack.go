@@ -42,12 +42,8 @@ func (s slackReporter) Process(report report.Report) error {
 	if f := footer(report); f != nil {
 		blocks = append(blocks, f)
 	}
-	blocks = append(blocks, slack.NewDividerBlock())
-
-	content := slack.MsgOptionBlocks(blocks...)
-	//h :=
-	//f := footer(report)
 	failedBackups := failedTasksAttachments(report)
+	content := slack.MsgOptionBlocks(blocks...)
 	_, _, _, err := s.api.SendMessage(s.channel, content, slack.MsgOptionAttachments(failedBackups...))
 	return err
 }
@@ -60,24 +56,12 @@ func header(r report.Report) slack.Block {
 	return nil
 }
 
-func failedTasks(report report.Report, blocks []slack.Block) []slack.Block {
-	for i, taskStatus := range report.Statuses() {
-		if !taskStatus.IsOK() {
-			failedCount := taskStatus.Expected - taskStatus.BackupCount
-			msg := fmt.Sprintf("> *%s*\n> Falló %d veces en los últimos %d reportes. Tolerancia %d\n> <https://www.youtube.com/watch?v=dQw4w9WgXcQ|Mas info>", taskStatus.Task.Name, failedCount, taskStatus.Task.Datapoints, taskStatus.Task.Tolerance)
-			taskBlock := slack.NewSectionBlock(slack.NewTextBlockObject(slack.MarkdownType, msg, false, false), nil, nil, slack.SectionBlockOptionBlockID(strconv.Itoa(i)))
-			blocks = append(blocks, taskBlock)
-		}
-	}
-	return blocks
-}
-
 func failedTasksAttachments(report report.Report) []slack.Attachment {
 	var failedTasks []slack.Attachment
 	for i, taskStatus := range report.Statuses() {
 		if !taskStatus.IsOK() {
 			failedCount := taskStatus.Expected - taskStatus.BackupCount
-			msg := fmt.Sprintf(" *%s*\n Falló %d veces en los últimos %d reportes. Tolerancia %d\n <https://www.youtube.com/watch?v=dQw4w9WgXcQ|Mas info>", taskStatus.Task.Name, failedCount, taskStatus.Task.Datapoints, taskStatus.Task.Tolerance)
+			msg := fmt.Sprintf(" *%s*\n Falló %d veces en los últimos %d reportes. Tolerancia %d", taskStatus.Task.Name, failedCount, taskStatus.Task.Datapoints, taskStatus.Task.Tolerance)
 			viewMoreBtn := slack.NewButtonBlockElement(fmt.Sprintf("view-more-%d", i), "asd", slack.NewTextBlockObject(slack.PlainTextType, "Mas info", false, false))
 			viewMoreBtn.URL = rickroll
 			viewMoreBtn.WithStyle(slack.StylePrimary)
