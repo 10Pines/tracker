@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/10Pines/tracker/v2/internal/logic"
 	"github.com/10Pines/tracker/v2/internal/models"
 )
 
@@ -43,7 +44,7 @@ func TestTaskStatusReady(t *testing.T) {
 			task.CreatedAt = creationTime
 			now := creationTime.AddDate(0, 0, test.daysOld)
 			report := newReport(now)
-			report.Got(task, 0)
+			report.Got(task, logic.BackupStats{})
 			statuses := report.Statuses()
 			assert.Len(t, statuses, 1)
 			assert.Equal(t, test.expectedReadiness, statuses[0].Ready)
@@ -54,15 +55,15 @@ func TestTaskStatusReady(t *testing.T) {
 func TestReport_IsOk_allTasksOk(t *testing.T) {
 	report := newReport(time.Now())
 	task := models.NewTask("test", 5, 2)
-	report.Got(task, 5)
+	report.Got(task, logic.BackupStats{CountWithinDatapoints: 5})
 	assert.True(t, report.IsOK())
 }
 
 func TestReport_IsOk_tasksInAlarmState(t *testing.T) {
 	report := newReport(time.Now())
 	task := models.NewTask("test", 5, 2)
-	report.Got(task, 5)
-	report.Got(task, 0)
+	report.Got(task, logic.BackupStats{CountWithinDatapoints: 5})
+	report.Got(task, logic.BackupStats{CountWithinDatapoints: 0})
 	assert.False(t, report.IsOK())
 }
 

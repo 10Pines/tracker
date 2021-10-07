@@ -19,8 +19,9 @@ const (
 type statusEmoji string
 
 const (
-	ok  statusEmoji = ":zorzal-tarea-ok:"
-	nok             = ":zorzal-tarea-error:"
+	ok      statusEmoji = ":zorzal-tarea-ok:"
+	nok                 = ":zorzal-tarea-error:"
+	pending             = ":zorzal-tarea-noactiva:"
 )
 
 type slackReporter struct {
@@ -89,9 +90,13 @@ func footer(r report.Report) slack.Block {
 	var msg strings.Builder
 	msg.WriteString("Tareas observadas:\n")
 	for _, taskStatus := range r.Statuses() {
-		em := taskEmoji(taskStatus)
-		ts := taskStatus.Task.CreatedAt.Format(shortISO)
-		msg.WriteString(fmt.Sprintf("%s %s *%s*\n", em, ts, taskStatus.Task.Name))
+		if taskStatus.TaskHasBackups() {
+			em := taskEmoji(taskStatus)
+			ts := taskStatus.LastBackup.Format(shortISO)
+			msg.WriteString(fmt.Sprintf("%s %s *%s*\n", em, ts, taskStatus.Task.Name))
+		} else {
+			msg.WriteString(fmt.Sprintf("%s Sin datos: *%s*\n", pending, taskStatus.Task.Name))
+		}
 	}
 	tasks := slack.NewTextBlockObject(slack.MarkdownType, msg.String(), false, false)
 	return slack.NewSectionBlock(tasks, nil, nil, slack.SectionBlockOptionBlockID("footer"))
@@ -100,7 +105,6 @@ func footer(r report.Report) slack.Block {
 func taskEmoji(taskStatus report.TaskStatus) statusEmoji {
 	if taskStatus.IsOK() {
 		return ok
-	} else {
-		return nok
 	}
+	return nok
 }

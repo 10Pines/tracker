@@ -38,11 +38,30 @@ func taskDefaults(taskName string) models.Task {
 	}
 }
 
-// CountBackupsByTaskIDAndCreatedAfter returns the backups count of said task after the given time
-func CountBackupsByTaskIDAndCreatedAfter(db *gorm.DB, taskID uint, since time.Time) (int64, error) {
+// BackupStats contains information regarding a task backups
+type BackupStats struct {
+	CountWithinDatapoints int64
+	LastBackup            time.Time
+}
+
+// BackupsStatsByTaskID returns the backups' stats of said task after the given time
+func BackupsStatsByTaskID(db *gorm.DB, taskID uint, since time.Time) (BackupStats, error) {
 	var backupCount int64
 	err := db.Model(&models.Backup{}).
 		Where("task_id = ? AND created_at > ?", taskID, since).
 		Count(&backupCount).Error
-	return backupCount, err
+	if err != nil {
+		return BackupStats{}, err
+	}
+
+	var lastBackup models.Backup
+	err = db.Last(&lastBackup).Error
+	if err != nil {
+		return BackupStats{}, err
+	}
+
+	return BackupStats{
+		LastBackup:            lastBackup.CreatedAt,
+		CountWithinDatapoints: backupCount,
+	}, nil
 }

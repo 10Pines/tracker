@@ -18,11 +18,17 @@ type TaskStatus struct {
 	BackupCount int64
 	Expected    int64
 	Ready       bool
+	LastBackup  time.Time
 }
 
 // IsOK returns whether the task is in an OK state
 func (s TaskStatus) IsOK() bool {
 	return !s.Ready || s.Expected <= s.BackupCount
+}
+
+// TaskHasBackups returns if the task has any backups at all
+func (s TaskStatus) TaskHasBackups() bool {
+	return !s.LastBackup.IsZero()
 }
 
 // Report represents the results of performing a check on all tasks
@@ -37,15 +43,17 @@ func newReport(timestamp time.Time) Report {
 	}
 }
 
-// Got tracks a task with the given backup count
-func (r *Report) Got(task models.Task, backupCount int64) {
+// Got tracks a task with the given backup stats
+func (r *Report) Got(task models.Task, stats logic.BackupStats) {
 	expectedBackupCount := int64(task.Datapoints - task.Tolerance)
-	r.statuses = append(r.statuses, TaskStatus{
+	status := TaskStatus{
 		Task:        task,
-		BackupCount: backupCount,
+		BackupCount: stats.CountWithinDatapoints,
 		Expected:    expectedBackupCount,
 		Ready:       r.isReady(task),
-	})
+		LastBackup:  stats.LastBackup,
+	}
+	r.statuses = append(r.statuses, status)
 }
 
 func (r Report) isReady(task models.Task) bool {
@@ -90,17 +98,17 @@ func Run(db *gorm.DB) (Report, error) {
 	report := newReport(now)
 	for _, task := range tasks {
 		log.Println()
-		backupCount, err := countBackups(task, now, db)
+		backupStats, err := backupStats(task, now, db)
 		if err != nil {
 			return Report{}, err
 		}
-		report.Got(task, backupCount)
+		report.Got(task, backupStats)
 	}
 	return report, nil
 }
 
-func countBackups(task models.Task, now time.Time, db *gorm.DB) (int64, error) {
+func backupStats(task models.Task, now time.Time, db *gorm.DB) (logic.BackupStats, error) {
 	sinceOffset := time.Duration(task.Datapoints) * days
 	since := now.Add(-sinceOffset)
-	return logic.CountBackupsByTaskIDAndCreatedAfter(db, task.ID, since)
+	return logic.BackupsStatsByTaskID(db, task.ID, since)
 }
