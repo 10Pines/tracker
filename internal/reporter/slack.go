@@ -69,12 +69,8 @@ func failedTasksAttachments(report report.Report) []slack.Attachment {
 	for i, taskStatus := range report.Statuses() {
 		if !taskStatus.IsOK() {
 			failedCount := taskStatus.Expected - taskStatus.BackupCount
-			msg := fmt.Sprintf(" *%s*\n Falló %d veces en los últimos %d reportes.", taskStatus.Task.Name, failedCount, taskStatus.Task.Datapoints)
-			viewMoreBtn := slack.NewButtonBlockElement(fmt.Sprintf("view-more-%d", i), "", slack.NewTextBlockObject(slack.PlainTextType, "Mas info", false, false))
-			viewMoreBtn.URL = rickroll
-			viewMoreBtn.WithStyle(slack.StylePrimary)
-			moreInfo := slack.NewAccessory(viewMoreBtn)
-			taskBlock := slack.NewSectionBlock(slack.NewTextBlockObject(slack.MarkdownType, msg, false, false), nil, moreInfo, slack.SectionBlockOptionBlockID(strconv.Itoa(i)))
+			msg := fmt.Sprintf(" *%s*\n Falló %d veces en los últimos %d reportes. <https://www.youtube.com/watch?v=dQw4w9WgXcQ|Info>", taskStatus.Task.Name, failedCount, taskStatus.Task.Datapoints)
+			taskBlock := slack.NewSectionBlock(slack.NewTextBlockObject(slack.MarkdownType, msg, false, false), nil, nil, slack.SectionBlockOptionBlockID(strconv.Itoa(i)))
 			failedTask := slack.Attachment{
 				ID:     i,
 				Color:  danger,
