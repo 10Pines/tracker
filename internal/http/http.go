@@ -16,6 +16,7 @@ type createTask struct {
 	Tolerance  int    `json:"tolerance" validate:"gte=0"`
 }
 
+// NewRouter returns a configured router with all application routes
 func NewRouter(l logic.Logic, key string) *gin.Engine {
 	router := gin.New()
 	router.Use(requestLogger())

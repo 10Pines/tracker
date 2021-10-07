@@ -2,59 +2,107 @@ package reporter
 
 import (
 	"fmt"
-	"time"
+	"strconv"
+	"strings"
 
 	"github.com/slack-go/slack"
 
 	"github.com/10Pines/tracker/v2/internal/report"
 )
 
-type SlackReporter struct {
+const (
+	shortISO = "2006-01-02 15:04"
+	danger   = "#fa352a"
+	rickroll = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+)
+
+type slackReporter struct {
 	api     *slack.Client
 	channel string
 }
 
-func NewSlackReporter(token, channel string) SlackReporter {
+// NewSlackReporter create a Reporter instance that sends messages via Slack
+func NewSlackReporter(token, channel string) Reporter {
 	api := slack.New(token)
-	return SlackReporter{
+	return slackReporter{
 		api:     api,
 		channel: channel,
 	}
 }
 
-func (s SlackReporter) SendReport(report report.Report) error {
-	blocks := []slack.Block{
-		slack.NewHeaderBlock(slack.NewTextBlockObject(slack.PlainTextType, ":newspaper:  Daily Report  :newspaper:", false, false)),
-		slack.NewContextBlock("date",
-			slack.NewTextBlockObject(slack.MarkdownType, with(report.Timestamp()), false, false),
-		),
-		slack.NewDividerBlock(),
-		slack.NewContextBlock("xxx",
-			slack.NewTextBlockObject(slack.MarkdownType, ":calendar: |   *PROCESSED TASKS*  | :calendar:", false, false),
-		),
-	}
-	blocks = append(blocks, taskSections(report)...)
-	blocks = append(blocks,
-		slack.NewDividerBlock(),
-		slack.NewContextBlock("footer",
-			slack.NewTextBlockObject(slack.MarkdownType, ":pushpin: Do you have something to include in the newsletter? Here's *how to submit content*.", false, false),
-		),
-	)
+func (s slackReporter) Name() string {
+	return "slack"
+}
 
-	_, _, _, err := s.api.SendMessage(s.channel, slack.MsgOptionBlocks(blocks...))
+func (s slackReporter) Process(report report.Report) error {
+	var blocks []slack.Block
+	if h := header(report); h != nil {
+		blocks = append(blocks, h)
+	}
+	if f := footer(report); f != nil {
+		blocks = append(blocks, f)
+	}
+	blocks = append(blocks, slack.NewDividerBlock())
+
+	content := slack.MsgOptionBlocks(blocks...)
+	//h :=
+	//f := footer(report)
+	failedBackups := failedTasksAttachments(report)
+	_, _, _, err := s.api.SendMessage(s.channel, content, slack.MsgOptionAttachments(failedBackups...))
 	return err
 }
 
-func taskSections(report report.Report) []slack.Block {
-	var blocks []slack.Block
-	for _, taskStatus := range report.Statuses() {
-		msg := fmt.Sprintf("`11/20-11/22` *%s*", taskStatus.Task.Name)
-		taskBlock := slack.NewSectionBlock(slack.NewTextBlockObject(slack.MarkdownType, msg, false, false), nil, nil)
-		blocks = append(blocks, taskBlock)
+func header(r report.Report) slack.Block {
+	if r.IsOK() {
+		msg := slack.NewTextBlockObject(slack.MarkdownType, "- _Pío-fui-pío, todo bien por aquí._", false, false)
+		return slack.NewSectionBlock(msg, nil, nil, slack.SectionBlockOptionBlockID("header"))
+	}
+	return nil
+}
+
+func failedTasks(report report.Report, blocks []slack.Block) []slack.Block {
+	for i, taskStatus := range report.Statuses() {
+		if !taskStatus.IsOK() {
+			failedCount := taskStatus.Expected - taskStatus.BackupCount
+			msg := fmt.Sprintf("> *%s*\n> Falló %d veces en los últimos %d reportes. Tolerancia %d\n> <https://www.youtube.com/watch?v=dQw4w9WgXcQ|Mas info>", taskStatus.Task.Name, failedCount, taskStatus.Task.Datapoints, taskStatus.Task.Tolerance)
+			taskBlock := slack.NewSectionBlock(slack.NewTextBlockObject(slack.MarkdownType, msg, false, false), nil, nil, slack.SectionBlockOptionBlockID(strconv.Itoa(i)))
+			blocks = append(blocks, taskBlock)
+		}
 	}
 	return blocks
 }
 
-func with(timestamp time.Time) string {
-	return fmt.Sprintf("*%s*  |  Sales Team Announcements", timestamp.Format(time.ANSIC))
+func failedTasksAttachments(report report.Report) []slack.Attachment {
+	var failedTasks []slack.Attachment
+	for i, taskStatus := range report.Statuses() {
+		if !taskStatus.IsOK() {
+			failedCount := taskStatus.Expected - taskStatus.BackupCount
+			msg := fmt.Sprintf(" *%s*\n Falló %d veces en los últimos %d reportes. Tolerancia %d\n <https://www.youtube.com/watch?v=dQw4w9WgXcQ|Mas info>", taskStatus.Task.Name, failedCount, taskStatus.Task.Datapoints, taskStatus.Task.Tolerance)
+			viewMoreBtn := slack.NewButtonBlockElement(fmt.Sprintf("view-more-%d", i), "asd", slack.NewTextBlockObject(slack.PlainTextType, "Mas info", false, false))
+			viewMoreBtn.URL = rickroll
+			viewMoreBtn.WithStyle(slack.StylePrimary)
+			moreInfo := slack.NewAccessory(viewMoreBtn)
+			taskBlock := slack.NewSectionBlock(slack.NewTextBlockObject(slack.MarkdownType, msg, false, false), nil, moreInfo, slack.SectionBlockOptionBlockID(strconv.Itoa(i)))
+			failedTask := slack.Attachment{
+				ID:     i,
+				Color:  danger,
+				Blocks: slack.Blocks{BlockSet: []slack.Block{taskBlock}},
+			}
+			failedTasks = append(failedTasks, failedTask)
+		}
+	}
+	return failedTasks
+}
+
+func footer(r report.Report) slack.Block {
+	var msg strings.Builder
+	msg.WriteString("Tareas reportadas\n")
+	for _, taskStatus := range r.Statuses() {
+		ts := taskStatus.Task.CreatedAt.Format(shortISO)
+		msg.WriteString(ts)
+		msg.WriteString(" ")
+		msg.WriteString(fmt.Sprintf("*%s*\n", taskStatus.Task.Name))
+	}
+	tasks := slack.NewTextBlockObject(slack.MarkdownType, msg.String(), false, false)
+	return slack.NewSectionBlock(tasks, nil, nil, slack.SectionBlockOptionBlockID("footer"))
 }

@@ -19,54 +19,54 @@ func (c *fakeClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func newTestTracker(opts ...Option) (*Tracker, *fakeClient) {
-	fakeHttp := &fakeClient{}
-	tracker := New("test", append(opts, OptionHttpClient(fakeHttp))...)
-	return tracker, fakeHttp
+	fakeHTTP := &fakeClient{}
+	tracker := New("test", append(opts, OptionHTTPClient(fakeHTTP))...)
+	return tracker, fakeHTTP
 }
 
 func TestTrackerCustomHttpClient(t *testing.T) {
-	tracker, fakeHttp := newTestTracker()
+	tracker, fakeHTTP := newTestTracker()
 
 	err := tracker.CreateBackup("payroll weekly backup")
 	assert.NoError(t, err)
 
-	assert.Len(t, fakeHttp.reqs, 1)
+	assert.Len(t, fakeHTTP.reqs, 1)
 }
 
 func TestTrackerDefaultUri(t *testing.T) {
-	tracker, fakeHttp := newTestTracker()
+	tracker, fakeHTTP := newTestTracker()
 
 	err := tracker.CreateBackup("payroll weekly backup")
 	assert.NoError(t, err)
 
-	assert.Contains(t, fakeHttp.reqs[0].URL.String(), defaultUri)
+	assert.Contains(t, fakeHTTP.reqs[0].URL.String(), defaultURI)
 }
 
 func TestTrackerCustomUri(t *testing.T) {
-	tracker, fakeHttp := newTestTracker(OptionUri("https://test.com"))
+	tracker, fakeHTTP := newTestTracker(OptionURI("https://test.com"))
 
 	err := tracker.CreateBackup("payroll weekly backup")
 	assert.NoError(t, err)
 
-	assert.Contains(t, fakeHttp.reqs[0].URL.String(), "https://test.com")
+	assert.Contains(t, fakeHTTP.reqs[0].URL.String(), "https://test.com")
 }
 
 func TestTrackerCreateBackupURI(t *testing.T) {
-	tracker, fakeHttp := newTestTracker()
+	tracker, fakeHTTP := newTestTracker()
 
 	err := tracker.CreateBackup("payroll weekly backup")
 	assert.NoError(t, err)
 
-	assert.Contains(t, fakeHttp.reqs[0].URL.String(), "/api/backup")
+	assert.Contains(t, fakeHTTP.reqs[0].URL.String(), "/api/backup")
 }
 
 func TestTrackerCreateBackupTaskName(t *testing.T) {
-	tracker, fakeHttp := newTestTracker()
+	tracker, fakeHTTP := newTestTracker()
 
 	err := tracker.CreateBackup("payroll weekly backup")
 	assert.NoError(t, err)
 
-	reqBody, err := ioutil.ReadAll(fakeHttp.reqs[0].Body)
+	reqBody, err := ioutil.ReadAll(fakeHTTP.reqs[0].Body)
 	assert.NoError(t, err)
 
 	var create CreateBackup
@@ -77,10 +77,10 @@ func TestTrackerCreateBackupTaskName(t *testing.T) {
 }
 
 func TestTrackerCreateBackupApiKey(t *testing.T) {
-	tracker, fakeHttp := newTestTracker()
+	tracker, fakeHTTP := newTestTracker()
 
 	err := tracker.CreateBackup("payroll weekly backup")
 	assert.NoError(t, err)
 
-	assert.Contains(t, fakeHttp.reqs[0].Header.Get(ApiKeyHeader), "test")
+	assert.Contains(t, fakeHTTP.reqs[0].Header.Get(APIKeyHeader), "test")
 }

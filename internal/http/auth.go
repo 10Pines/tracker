@@ -10,7 +10,7 @@ import (
 
 func apiKeyRequired(key string) gin.HandlerFunc {
 	return func(g *gin.Context) {
-		if g.GetHeader(tracker.ApiKeyHeader) != key {
+		if g.GetHeader(tracker.APIKeyHeader) != key {
 			g.AbortWithStatus(http.StatusUnauthorized)
 		}
 	}

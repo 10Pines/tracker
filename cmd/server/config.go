@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -9,11 +10,13 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/10Pines/tracker/v2/internal/models"
+	"github.com/10Pines/tracker/v2/internal/reporter"
 )
 
 type config struct {
-	dbPath string
-	apiKey string
+	dbPath     string
+	apiKey     string
+	slackToken string
 }
 
 func mustNewSQL(dbPath string) *gorm.DB {
@@ -30,16 +33,30 @@ func mustNewSQL(dbPath string) *gorm.DB {
 }
 
 func mustParseConfig() config {
-	apiKey, ok := os.LookupEnv("API_KEY")
-	if !ok {
-		log.Fatalf("API_KEY is missing")
-	}
+	apiKey := mustGetEnv("API_KEY")
 
 	dbPath := os.Getenv("DB_PATH")
 	dbPath = path.Join(dbPath, "tracker.db")
 
+	slackToken := mustGetEnv("SLACK_TOKEN")
+
 	return config{
-		dbPath: dbPath,
-		apiKey: apiKey,
+		dbPath:     dbPath,
+		apiKey:     apiKey,
+		slackToken: slackToken,
 	}
+}
+
+func mustGetEnv(name string) string {
+	apiKey, ok := os.LookupEnv(name)
+	if !ok {
+		log.Fatalf(fmt.Sprintf("%s is missing", name))
+	}
+	return apiKey
+}
+
+func combinedReporter(token string) reporter.Reporter {
+	sr := reporter.NewSlackReporter(token, "infraestructura-feed")
+	cr := reporter.NewConsoleReporter()
+	return reporter.Multiple(cr, sr)
 }

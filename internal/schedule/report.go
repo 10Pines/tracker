@@ -10,6 +10,7 @@ import (
 	"github.com/10Pines/tracker/v2/internal/reporter"
 )
 
+// PeriodicallyRunReport runs a report at 12PM, every 24 hours
 func PeriodicallyRunReport(db *gorm.DB, reporter reporter.Reporter) {
 	wait := timeUntilNextReport(time.Now())
 	time.Sleep(wait)
@@ -22,7 +23,7 @@ func PeriodicallyRunReport(db *gorm.DB, reporter reporter.Reporter) {
 				log.Println(err)
 				continue
 			}
-			err = reporter(r)
+			err = reporter.Process(r)
 			if err != nil {
 				log.Println(err)
 			}

@@ -9,4 +9,4 @@ FROM alpine:3.14
 WORKDIR /var/tracker
 ENV GIN_MODE=release
 COPY --from=builder /var/build/server .
-CMD ["./server"]
+ENTRYPOINT ["./server"]

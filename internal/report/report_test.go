@@ -50,3 +50,43 @@ func TestTaskStatusReady(t *testing.T) {
 		})
 	}
 }
+
+func TestReport_IsOk_allTasksOk(t *testing.T) {
+	report := newReport(time.Now())
+	task := models.NewTask("test", 5, 2)
+	report.Got(task, 5)
+	assert.True(t, report.IsOK())
+}
+
+func TestReport_IsOk_tasksInAlarmState(t *testing.T) {
+	report := newReport(time.Now())
+	task := models.NewTask("test", 5, 2)
+	report.Got(task, 5)
+	report.Got(task, 0)
+	assert.False(t, report.IsOK())
+}
+
+func TestTaskStatus_IsOk_NotReady(t *testing.T) {
+	ts := TaskStatus{
+		Ready: false,
+	}
+	assert.True(t, ts.IsOK())
+}
+
+func TestTaskStatus_IsOk_Ready_UnderThreshold(t *testing.T) {
+	ts := TaskStatus{
+		Ready:       true,
+		BackupCount: 5,
+		Expected:    5,
+	}
+	assert.True(t, ts.IsOK())
+}
+
+func TestTaskStatus_IsOk_Ready_OverThreshold(t *testing.T) {
+	ts := TaskStatus{
+		Ready:       true,
+		BackupCount: 2,
+		Expected:    5,
+	}
+	assert.False(t, ts.IsOK())
+}

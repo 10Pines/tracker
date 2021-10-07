@@ -13,21 +13,12 @@ func createTask(db *gorm.DB, task *models.Task) error {
 	return err
 }
 
-func findTaskByID(db *gorm.DB, taskID uint, task *models.Task) error {
-	err := db.First(task, taskID).Error
-	return err
-}
-
-func saveTask(db *gorm.DB, task *models.Task) error {
-	err := db.Save(task).Error
-	return err
-}
-
 func saveBackup(db *gorm.DB, backup *models.Backup) error {
 	err := db.Save(backup).Error
 	return err
 }
 
+// AllTasksSortedByIDASC retrieves all tasks sorted by ID DESC
 func AllTasksSortedByIDASC(db *gorm.DB, tasks *[]models.Task) error {
 	err := db.Find(tasks).Order("id ASC").Error
 	return err
@@ -47,6 +38,7 @@ func taskDefaults(taskName string) models.Task {
 	}
 }
 
+// CountBackupsByTaskIDAndCreatedAfter returns the backups count of said task after the given time
 func CountBackupsByTaskIDAndCreatedAfter(db *gorm.DB, taskID uint, since time.Time) (int64, error) {
 	var backupCount int64
 	err := db.Model(&models.Backup{}).

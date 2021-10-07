@@ -1,5 +1,6 @@
 package models
 
+// Task represents the activity of doing a backup
 type Task struct {
 	Model
 	Name       string `gorm:"uniqueIndex"`
@@ -8,6 +9,7 @@ type Task struct {
 	Backups    []Backup
 }
 
+// CreateBackup creates a new Backup
 func (t *Task) CreateBackup() Backup {
 	backup := Backup{}
 	backup.TaskID = t.ID
@@ -15,6 +17,7 @@ func (t *Task) CreateBackup() Backup {
 	return backup
 }
 
+// NewTask creates a new Task instance
 func NewTask(name string, datapoints, tolerance int) Task {
 	return Task{
 		Name:       name,

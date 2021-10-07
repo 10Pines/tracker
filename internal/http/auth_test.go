@@ -31,12 +31,12 @@ func TestApiKeyRequired(t *testing.T) {
 		},
 		{
 			name:           "incorrect value",
-			headers:        map[string]string{tracker.ApiKeyHeader: "test"},
+			headers:        map[string]string{tracker.APIKeyHeader: "test"},
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
 			name:           "correct header",
-			headers:        map[string]string{tracker.ApiKeyHeader: apiKey},
+			headers:        map[string]string{tracker.APIKeyHeader: apiKey},
 			expectedStatus: http.StatusOK,
 		},
 	}

@@ -9,10 +9,12 @@ import (
 	"net/http"
 )
 
-const ApiKeyHeader = "X-API-KEY"
+// APIKeyHeader is the http header to send the API key
+const APIKeyHeader = "X-API-KEY"
 
-const defaultUri = "https://tracker.10pines.com/api"
+const defaultURI = "https://tracker.10pines.com/api"
 
+// CreateBackup defines the necessary arguments required to create a backup
 type CreateBackup struct {
 	TaskName string `json:"taskName"`
 }
@@ -21,30 +23,35 @@ type httpClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
+// Tracker is the client used to interact with the system
 type Tracker struct {
 	httpClient httpClient
 	uri        string
 	apiKey     string
 }
 
+// Option types a generic Tracker customization
 type Option func(*Tracker)
 
-func OptionHttpClient(client httpClient) Option {
+// OptionHTTPClient customizes underlying HTTP client
+func OptionHTTPClient(client httpClient) Option {
 	return func(tracker *Tracker) {
 		tracker.httpClient = client
 	}
 }
 
-func OptionUri(uri string) Option {
+// OptionURI customizes the client URI
+func OptionURI(uri string) Option {
 	return func(tracker *Tracker) {
 		tracker.uri = uri
 	}
 }
 
+// New returns a tracker instance
 func New(key string, options ...Option) *Tracker {
 	t := &Tracker{
 		httpClient: http.DefaultClient,
-		uri:        defaultUri,
+		uri:        defaultURI,
 		apiKey:     key,
 	}
 
@@ -55,6 +62,7 @@ func New(key string, options ...Option) *Tracker {
 	return t
 }
 
+// CreateBackup tracks a backup completion
 func (t Tracker) CreateBackup(taskName string) error {
 	url := fmt.Sprintf("%s/backups", t.uri)
 	create := CreateBackup{TaskName: taskName}
@@ -65,7 +73,7 @@ func (t Tracker) CreateBackup(taskName string) error {
 		return err
 	}
 	req, err := http.NewRequest(http.MethodPost, url, &body)
-	req.Header.Set(ApiKeyHeader, t.apiKey)
+	req.Header.Set(APIKeyHeader, t.apiKey)
 	if err != nil {
 		return err
 	}

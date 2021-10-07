@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	apiKey := mustGetApiKey()
+	apiKey := mustGetAPIKey()
 	taskName := mustParseTaskName()
 	t := tracker.New(apiKey)
 	err := t.CreateBackup(taskName)
@@ -17,7 +17,7 @@ func main() {
 	}
 }
 
-func mustGetApiKey() string {
+func mustGetAPIKey() string {
 	key, ok := os.LookupEnv("API_KEY")
 	if !ok {
 		log.Fatal("API_KEY is missing")
