@@ -4,7 +4,7 @@ import (
 	"errors"
 	"log"
 
-	"github.com/10Pines/tracker/v2/internal/report"
+	"github.com/10Pines/tracker/v2/internal/logic"
 )
 
 // Reporter defines a common set of methods for reporters
@@ -12,7 +12,7 @@ type Reporter interface {
 	// Name returns the reporter Name
 	Name() string
 	// Process communicates the report using the underlying transport
-	Process(report report.Report) error
+	Process(report logic.Report) error
 }
 
 type multiple struct {
@@ -28,7 +28,7 @@ func (m multiple) Name() string {
 	return "Multiple"
 }
 
-func (m multiple) Process(report report.Report) error {
+func (m multiple) Process(report logic.Report) error {
 	var err error
 	for _, reporter := range m.reporters {
 		log.Printf("reporter[%s]", reporter.Name())

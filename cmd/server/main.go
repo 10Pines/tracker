@@ -10,12 +10,13 @@ import (
 
 func main() {
 	config := mustParseConfig()
-	db := mustNewSQL(config.dbPath)
+	db := mustNewSQL(config.dbDSN)
 	reporter := combinedReporter(config.slackToken)
 
-	go schedule.PeriodicallyRunReport(db, reporter)
-
 	l := logic.New(db)
+
+	go schedule.PeriodicallyRunReport(l, reporter)
+
 	router := http.NewRouter(l, config.apiKey)
 
 	addr := ":8080"

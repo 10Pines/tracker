@@ -1,12 +1,10 @@
-package report
+package logic
 
 import (
-	"log"
 	"time"
 
 	"gorm.io/gorm"
 
-	"github.com/10Pines/tracker/v2/internal/logic"
 	"github.com/10Pines/tracker/v2/internal/models"
 )
 
@@ -44,7 +42,7 @@ func newReport(timestamp time.Time) Report {
 }
 
 // Got tracks a task with the given backup stats
-func (r *Report) Got(task models.Task, stats logic.BackupStats) {
+func (r *Report) Got(task models.Task, stats backupStats) {
 	expectedBackupCount := int64(task.Datapoints - task.Tolerance)
 	status := TaskStatus{
 		Task:        task,
@@ -72,11 +70,6 @@ func (r Report) Statuses() []TaskStatus {
 	return r.statuses
 }
 
-//// Timestamp returns the report creation Timestamp
-//func (r *Report) Timestamp() time.Time {
-//	return r.Timestamp
-//}
-
 // IsOK returns whether all tasks are in an OK state
 func (r *Report) IsOK() bool {
 	for _, status := range r.statuses {
@@ -87,28 +80,8 @@ func (r *Report) IsOK() bool {
 	return true
 }
 
-// Run generates a report containing every task status
-func Run(db *gorm.DB) (Report, error) {
-	now := time.Now()
-	var tasks []models.Task
-	err := logic.AllTasksSortedByIDASC(db, &tasks)
-	if err != nil {
-		return Report{}, err
-	}
-	report := newReport(now)
-	for _, task := range tasks {
-		log.Println()
-		backupStats, err := backupStats(task, now, db)
-		if err != nil {
-			return Report{}, err
-		}
-		report.Got(task, backupStats)
-	}
-	return report, nil
-}
-
-func backupStats(task models.Task, now time.Time, db *gorm.DB) (logic.BackupStats, error) {
+func getStats(task models.Task, now time.Time, db *gorm.DB) (backupStats, error) {
 	sinceOffset := time.Duration(task.Datapoints) * days
 	since := now.Add(-sinceOffset)
-	return logic.BackupsStatsByTaskID(db, task.ID, since)
+	return backupsStatsByTaskID(db, task.ID, since)
 }

@@ -18,8 +18,7 @@ func saveBackup(db *gorm.DB, backup *models.Backup) error {
 	return err
 }
 
-// AllTasksSortedByIDASC retrieves all tasks sorted by ID DESC
-func AllTasksSortedByIDASC(db *gorm.DB, tasks *[]models.Task) error {
+func allTasksSortedByIDASC(db *gorm.DB, tasks *[]models.Task) error {
 	err := db.Find(tasks).Order("id ASC").Error
 	return err
 }
@@ -38,29 +37,27 @@ func taskDefaults(taskName string) models.Task {
 	}
 }
 
-// BackupStats contains information regarding a task backups
-type BackupStats struct {
+type backupStats struct {
 	CountWithinDatapoints int64
 	LastBackup            time.Time
 }
 
-// BackupsStatsByTaskID returns the backups' stats of said task after the given time
-func BackupsStatsByTaskID(db *gorm.DB, taskID uint, since time.Time) (BackupStats, error) {
+func backupsStatsByTaskID(db *gorm.DB, taskID uint, since time.Time) (backupStats, error) {
 	var backupCount int64
 	err := db.Model(&models.Backup{}).
 		Where("task_id = ? AND created_at > ?", taskID, since).
 		Count(&backupCount).Error
 	if err != nil {
-		return BackupStats{}, err
+		return backupStats{}, err
 	}
 
 	var lastBackup models.Backup
 	err = db.Last(&lastBackup).Error
 	if err != nil {
-		return BackupStats{}, err
+		return backupStats{}, err
 	}
 
-	return BackupStats{
+	return backupStats{
 		LastBackup:            lastBackup.CreatedAt,
 		CountWithinDatapoints: backupCount,
 	}, nil

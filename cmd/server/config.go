@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"github.com/10Pines/tracker/v2/internal/models"
@@ -14,14 +13,13 @@ import (
 )
 
 type config struct {
-	dbPath     string
 	apiKey     string
 	slackToken string
+	dbDSN      string
 }
 
-func mustNewSQL(dbPath string) *gorm.DB {
-	log.Printf("db attached at %s", dbPath)
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+func mustNewSQL(dsn string) *gorm.DB {
+	db, err := gorm.Open(postgres.Open(dsn))
 	if err != nil {
 		log.Fatalf("cannot connect to db: %v", err)
 	}
@@ -34,16 +32,13 @@ func mustNewSQL(dbPath string) *gorm.DB {
 
 func mustParseConfig() config {
 	apiKey := mustGetEnv("API_KEY")
-
-	dbPath := os.Getenv("DB_PATH")
-	dbPath = path.Join(dbPath, "tracker.db")
-
 	slackToken := mustGetEnv("SLACK_TOKEN")
+	dbDSN := mustGetEnv("DB_DSN")
 
 	return config{
-		dbPath:     dbPath,
 		apiKey:     apiKey,
 		slackToken: slackToken,
+		dbDSN:      dbDSN,
 	}
 }
 

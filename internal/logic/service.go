@@ -1,6 +1,9 @@
 package logic
 
 import (
+	"log"
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/10Pines/tracker/v2/internal/models"
@@ -56,4 +59,23 @@ func (l Logic) CreateBackup(create CreateBackup) (models.Backup, error) {
 		return models.Backup{}, err
 	}
 	return backup, nil
+}
+
+// CreateReport creates a report analyzing all tasks
+func (l Logic) CreateReport(now time.Time) (Report, error) {
+	var tasks []models.Task
+	err := allTasksSortedByIDASC(l.db, &tasks)
+	if err != nil {
+		return Report{}, err
+	}
+	report := newReport(now)
+	for _, task := range tasks {
+		log.Println()
+		stats, err := getStats(task, now, l.db)
+		if err != nil {
+			return Report{}, err
+		}
+		report.Got(task, stats)
+	}
+	return report, nil
 }

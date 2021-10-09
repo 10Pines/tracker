@@ -4,19 +4,18 @@ import (
 	"log"
 	"time"
 
-	"gorm.io/gorm"
-
-	"github.com/10Pines/tracker/v2/internal/report"
+	"github.com/10Pines/tracker/v2/internal/logic"
 	"github.com/10Pines/tracker/v2/internal/reporter"
 )
 
 // PeriodicallyRunReport runs a report at 12PM, every 24 hours
-func PeriodicallyRunReport(db *gorm.DB, reporter reporter.Reporter) {
+func PeriodicallyRunReport(l logic.Logic, reporter reporter.Reporter) {
 	for {
 		wait := timeUntilNextReport(time.Now())
 		logWaitTime(wait)
 		time.Sleep(wait)
-		r, err := report.Run(db)
+		now := time.Now()
+		r, err := l.CreateReport(now)
 		if err != nil {
 			log.Println(err)
 			continue
