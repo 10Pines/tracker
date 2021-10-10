@@ -52,7 +52,7 @@ func backupsStatsByTaskID(db *gorm.DB, taskID uint, since time.Time) (backupStat
 	}
 
 	var lastBackup models.Backup
-	err = db.Last(&lastBackup).Error
+	err = db.Where(&models.Backup{TaskID: taskID}).Last(&lastBackup).Error
 	if err != nil {
 		return backupStats{}, err
 	}
