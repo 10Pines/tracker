@@ -13,7 +13,6 @@ import (
 const (
 	shortISO = "2006-01-02 15:04"
 	danger   = "#FF5248"
-	rickroll = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 )
 
 type statusEmoji string
