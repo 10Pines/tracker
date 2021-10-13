@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -23,6 +24,11 @@ func mustNewSQL(dsn string) *gorm.DB {
 	if err != nil {
 		log.Fatalf("cannot connect to db: %v", err)
 	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 	err = db.AutoMigrate(&models.Backup{}, &models.Task{})
 	if err != nil {
 		log.Fatal(err)
