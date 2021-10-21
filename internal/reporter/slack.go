@@ -19,8 +19,8 @@ type statusEmoji string
 
 const (
 	ok      statusEmoji = ":zorzal-tarea-ok:"
-	nok                 = ":zorzal-tarea-error:"
-	pending             = ":zorzal-tarea-noactiva:"
+	nok     statusEmoji = ":zorzal-tarea-error:"
+	pending statusEmoji = ":zorzal-tarea-noactiva:"
 )
 
 type slackReporter struct {
@@ -43,24 +43,14 @@ func (s slackReporter) Name() string {
 
 func (s slackReporter) Process(report logic.Report) error {
 	var blocks []slack.Block
-	if h := header(report); h != nil {
-		blocks = append(blocks, h)
-	}
 	if f := footer(report); f != nil {
 		blocks = append(blocks, f)
 	}
-	failedBackups := failedTasksAttachments(report)
 	content := slack.MsgOptionBlocks(blocks...)
-	_, _, _, err := s.api.SendMessage(s.channel, content, slack.MsgOptionAttachments(failedBackups...))
+	failedBackups := failedTasksAttachments(report)
+	attachments := slack.MsgOptionAttachments(failedBackups...)
+	_, _, _, err := s.api.SendMessage(s.channel, content, attachments)
 	return err
-}
-
-func header(r logic.Report) slack.Block {
-	if r.IsOK() {
-		msg := slack.NewTextBlockObject(slack.MarkdownType, "- _Pío-fui-pío, todo bien por aquí._", false, false)
-		return slack.NewSectionBlock(msg, nil, nil, slack.SectionBlockOptionBlockID("header"))
-	}
-	return nil
 }
 
 func failedTasksAttachments(report logic.Report) []slack.Attachment {

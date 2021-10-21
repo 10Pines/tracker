@@ -39,6 +39,7 @@ func (m multiple) Process(report logic.Report) error {
 	}
 	if err != nil {
 		err = errors.New("reporter failed")
+		return err
 	}
 	return nil
 }
