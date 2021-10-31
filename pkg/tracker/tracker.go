@@ -16,7 +16,7 @@ const defaultURI = "https://tracker.10pines.com/api"
 
 // CreateBackup defines the necessary arguments required to create a backup
 type CreateBackup struct {
-	TaskName string `json:"taskName"`
+	TaskName string `json:"taskName" binding:"required"`
 }
 
 type httpClient interface {
