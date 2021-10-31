@@ -50,6 +50,13 @@ func backupsStatsByTaskID(db *gorm.DB, taskID uint, since time.Time) (backupStat
 	if err != nil {
 		return backupStats{}, err
 	}
+	
+	if backupCount == 0 {
+		return backupStats{
+			LastBackup:            time.Time{},
+			CountWithinDatapoints: backupCount,
+		}, nil
+	}
 
 	var lastBackup models.Backup
 	err = db.Where(&models.Backup{TaskID: taskID}).Last(&lastBackup).Error

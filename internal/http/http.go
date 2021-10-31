@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -61,7 +62,48 @@ func NewRouter(l logic.Logic, key string) *gin.Engine {
 		}
 		g.JSON(http.StatusCreated, gin.H{"id": task.ID})
 	})
+
+	api.POST("/reports", func(g *gin.Context) {
+		now := time.Now()
+		report, err := l.CreateReport(now)
+		if err != nil {
+			g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		g.JSON(http.StatusOK, asJSON(report))
+	})
 	return router
+}
+
+func asJSON(report logic.Report) gin.H {
+	var status string
+	if report.IsOK() {
+		status = "OK"
+	} else {
+		status = "ERR"
+	}
+
+	tasks := make([]gin.H, 0)
+	for _, taskStatus := range report.Statuses() {
+
+		task := gin.H{
+			"name":    taskStatus.Task.Name,
+			"status":  taskStatus.BackupCount,
+			"isReady": taskStatus.Ready,
+		}
+
+		if !taskStatus.LastBackup.IsZero() {
+			task["lastBackup"] = taskStatus.LastBackup.Format(time.RFC3339)
+		}
+
+		tasks = append(tasks, task)
+	}
+
+	return gin.H{
+		"time":   report.Timestamp.Format(time.RFC3339),
+		"status": status,
+		"tasks":  tasks,
+	}
 }
 
 func requestLogger() gin.HandlerFunc {
