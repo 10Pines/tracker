@@ -85,7 +85,6 @@ func asJSON(report logic.Report) gin.H {
 
 	tasks := make([]gin.H, 0)
 	for _, taskStatus := range report.Statuses() {
-
 		task := gin.H{
 			"name":    taskStatus.Task.Name,
 			"status":  taskStatus.BackupCount,

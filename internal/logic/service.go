@@ -1,7 +1,6 @@
 package logic
 
 import (
-	"log"
 	"time"
 
 	"gorm.io/gorm"
@@ -70,7 +69,6 @@ func (l Logic) CreateReport(now time.Time) (Report, error) {
 	}
 	report := newReport(now)
 	for _, task := range tasks {
-		log.Println()
 		stats, err := getStats(task, now, l.db)
 		if err != nil {
 			return Report{}, err
