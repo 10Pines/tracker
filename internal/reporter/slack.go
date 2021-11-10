@@ -7,7 +7,7 @@ import (
 
 	"github.com/slack-go/slack"
 
-	"github.com/10Pines/tracker/v2/internal/logic"
+	"github.com/10Pines/tracker/v2/internal/shared"
 )
 
 const (
@@ -41,7 +41,7 @@ func (s slackReporter) Name() string {
 	return "slack"
 }
 
-func (s slackReporter) Process(report logic.Report) error {
+func (s slackReporter) Process(report shared.Report) error {
 	var blocks []slack.Block
 	if f := footer(report); f != nil {
 		blocks = append(blocks, f)
@@ -53,7 +53,7 @@ func (s slackReporter) Process(report logic.Report) error {
 	return err
 }
 
-func failedTasksAttachments(report logic.Report) []slack.Attachment {
+func failedTasksAttachments(report shared.Report) []slack.Attachment {
 	var failedTasks []slack.Attachment
 	for i, taskStatus := range report.Statuses() {
 		if !taskStatus.IsOK() {
@@ -71,7 +71,7 @@ func failedTasksAttachments(report logic.Report) []slack.Attachment {
 	return failedTasks
 }
 
-func footer(r logic.Report) slack.Block {
+func footer(r shared.Report) slack.Block {
 	var msg strings.Builder
 	msg.WriteString("Tareas observadas:\n")
 	for _, taskStatus := range r.Statuses() {
@@ -87,7 +87,7 @@ func footer(r logic.Report) slack.Block {
 	return slack.NewSectionBlock(tasks, nil, nil, slack.SectionBlockOptionBlockID("footer"))
 }
 
-func taskEmoji(taskStatus logic.TaskStatus) statusEmoji {
+func taskEmoji(taskStatus shared.TaskStatus) statusEmoji {
 	if taskStatus.IsOK() {
 		return ok
 	}

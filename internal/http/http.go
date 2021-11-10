@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/10Pines/tracker/v2/internal/shared"
 	"github.com/10Pines/tracker/v2/pkg/tracker"
 
 	"github.com/10Pines/tracker/v2/internal/logic"
@@ -15,6 +16,10 @@ type createTask struct {
 	Name       string `json:"name" binding:"required"`
 	Datapoints int    `json:"datapoints" binding:"required" validate:"gt=0"`
 	Tolerance  int    `json:"tolerance" validate:"gte=0"`
+}
+
+type createReport struct {
+	Notify bool `json:"notify"`
 }
 
 // NewRouter returns a configured router with all application routes
@@ -39,7 +44,7 @@ func NewRouter(l logic.Logic, key string) *gin.Engine {
 		}
 		backup, err := l.CreateBackup(create)
 		if err != nil {
-			g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			respondInternalServerError(g, err)
 			return
 		}
 		g.JSON(http.StatusCreated, gin.H{"id": backup.ID})
@@ -57,25 +62,35 @@ func NewRouter(l logic.Logic, key string) *gin.Engine {
 		}
 		task, err := l.CreateTask(create)
 		if err != nil {
-			g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			respondInternalServerError(g, err)
 			return
 		}
 		g.JSON(http.StatusCreated, gin.H{"id": task.ID})
 	})
 
 	api.POST("/reports", func(g *gin.Context) {
+		var params createReport
+		if err := g.BindJSON(&params); err != nil {
+			return
+		}
 		now := time.Now()
 		report, err := l.CreateReport(now)
 		if err != nil {
-			g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			respondInternalServerError(g, err)
 			return
+		}
+		if params.Notify {
+			if err = l.NotifyReport(report); err != nil {
+				respondInternalServerError(g, err)
+				return
+			}
 		}
 		g.JSON(http.StatusOK, asJSON(report))
 	})
 	return router
 }
 
-func asJSON(report logic.Report) gin.H {
+func asJSON(report shared.Report) gin.H {
 	var status string
 	if report.IsOK() {
 		status = "OK"
@@ -113,4 +128,8 @@ func requestLogger() gin.HandlerFunc {
 	}
 	requestLogger := gin.LoggerWithConfig(loggerConfig)
 	return requestLogger
+}
+
+func respondInternalServerError(g *gin.Context, err error) {
+	g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 }

@@ -5,7 +5,6 @@ import (
 
 	"github.com/10Pines/tracker/v2/internal/http"
 	"github.com/10Pines/tracker/v2/internal/logic"
-	"github.com/10Pines/tracker/v2/internal/schedule"
 )
 
 func main() {
@@ -13,9 +12,7 @@ func main() {
 	db := mustNewSQL(config.dbDSN)
 	reporter := combinedReporter(config.slackToken)
 
-	l := logic.New(db)
-
-	go schedule.PeriodicallyRunReport(l, reporter)
+	l := logic.New(db, reporter)
 
 	router := http.NewRouter(l, config.apiKey)
 

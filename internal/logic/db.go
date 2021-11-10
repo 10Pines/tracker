@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/10Pines/tracker/v2/internal/models"
+	"github.com/10Pines/tracker/v2/internal/shared"
 )
 
 func createTask(db *gorm.DB, task *models.Task) error {
@@ -37,22 +38,17 @@ func taskDefaults(taskName string) models.Task {
 	}
 }
 
-type backupStats struct {
-	CountWithinDatapoints int64
-	LastBackup            time.Time
-}
-
-func backupsStatsByTaskID(db *gorm.DB, taskID uint, since time.Time) (backupStats, error) {
+func backupsStatsByTaskID(db *gorm.DB, taskID uint, since time.Time) (shared.BackupStats, error) {
 	var backupCount int64
 	err := db.Model(&models.Backup{}).
 		Where("task_id = ? AND created_at > ?", taskID, since).
 		Count(&backupCount).Error
 	if err != nil {
-		return backupStats{}, err
+		return shared.BackupStats{}, err
 	}
-	
+
 	if backupCount == 0 {
-		return backupStats{
+		return shared.BackupStats{
 			LastBackup:            time.Time{},
 			CountWithinDatapoints: backupCount,
 		}, nil
@@ -61,10 +57,10 @@ func backupsStatsByTaskID(db *gorm.DB, taskID uint, since time.Time) (backupStat
 	var lastBackup models.Backup
 	err = db.Where(&models.Backup{TaskID: taskID}).Last(&lastBackup).Error
 	if err != nil {
-		return backupStats{}, err
+		return shared.BackupStats{}, err
 	}
 
-	return backupStats{
+	return shared.BackupStats{
 		LastBackup:            lastBackup.CreatedAt,
 		CountWithinDatapoints: backupCount,
 	}, nil

@@ -1,4 +1,4 @@
-package logic
+package shared
 
 import (
 	"testing"
@@ -42,8 +42,8 @@ func TestTaskStatusReady(t *testing.T) {
 			creationTime, _ := time.Parse(time.RFC3339, "2021-02-10T00:00:00Z")
 			task.CreatedAt = creationTime
 			now := creationTime.AddDate(0, 0, test.daysOld)
-			report := newReport(now)
-			report.Got(task, backupStats{})
+			report := NewReport(now)
+			report.Got(task, BackupStats{})
 			statuses := report.Statuses()
 			assert.Len(t, statuses, 1)
 			assert.Equal(t, test.expectedReadiness, statuses[0].Ready)
@@ -52,17 +52,17 @@ func TestTaskStatusReady(t *testing.T) {
 }
 
 func TestReport_IsOk_allTasksOk(t *testing.T) {
-	report := newReport(time.Now())
+	report := NewReport(time.Now())
 	task := models.NewTask("test", 5, 2)
-	report.Got(task, backupStats{CountWithinDatapoints: 5})
+	report.Got(task, BackupStats{CountWithinDatapoints: 5})
 	assert.True(t, report.IsOK())
 }
 
 func TestReport_IsOk_tasksInAlarmState(t *testing.T) {
-	report := newReport(time.Now())
+	report := NewReport(time.Now())
 	task := models.NewTask("test", 5, 2)
-	report.Got(task, backupStats{CountWithinDatapoints: 5})
-	report.Got(task, backupStats{CountWithinDatapoints: 0})
+	report.Got(task, BackupStats{CountWithinDatapoints: 5})
+	report.Got(task, BackupStats{CountWithinDatapoints: 0})
 	assert.False(t, report.IsOK())
 }
 

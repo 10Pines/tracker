@@ -6,11 +6,14 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/10Pines/tracker/v2/internal/models"
+	"github.com/10Pines/tracker/v2/internal/reporter"
+	"github.com/10Pines/tracker/v2/internal/shared"
 )
 
 // Logic contains all business logic
 type Logic struct {
-	db *gorm.DB
+	db       *gorm.DB
+	reporter reporter.Reporter
 }
 
 // CreateTask represents the params necessary to create a new task
@@ -26,9 +29,10 @@ type CreateBackup struct {
 }
 
 // New returns a Logic instance
-func New(db *gorm.DB) Logic {
+func New(db *gorm.DB, reporter reporter.Reporter) Logic {
 	return Logic{
-		db,
+		db:       db,
+		reporter: reporter,
 	}
 }
 
@@ -61,19 +65,30 @@ func (l Logic) CreateBackup(create CreateBackup) (models.Backup, error) {
 }
 
 // CreateReport creates a report analyzing all tasks
-func (l Logic) CreateReport(now time.Time) (Report, error) {
+func (l Logic) CreateReport(now time.Time) (shared.Report, error) {
 	var tasks []models.Task
 	err := allTasksSortedByIDASC(l.db, &tasks)
 	if err != nil {
-		return Report{}, err
+		return shared.Report{}, err
 	}
-	report := newReport(now)
+	report := shared.NewReport(now)
 	for _, task := range tasks {
 		stats, err := getStats(task, now, l.db)
 		if err != nil {
-			return Report{}, err
+			return shared.Report{}, err
 		}
 		report.Got(task, stats)
 	}
 	return report, nil
+}
+
+// NotifyReport broadcast the given report to configured sinks
+func (l Logic) NotifyReport(report shared.Report) error {
+	return l.reporter.Process(report)
+}
+
+func getStats(task models.Task, now time.Time, db *gorm.DB) (shared.BackupStats, error) {
+	sinceOffset := time.Duration(task.Datapoints) * shared.Day
+	since := now.Add(-sinceOffset)
+	return backupsStatsByTaskID(db, task.ID, since)
 }

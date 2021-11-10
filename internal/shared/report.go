@@ -1,33 +1,13 @@
-package logic
+package shared
 
 import (
 	"time"
 
-	"gorm.io/gorm"
-
 	"github.com/10Pines/tracker/v2/internal/models"
 )
 
-const days = 24 * time.Hour
-
-// TaskStatus represents the result of checking a task
-type TaskStatus struct {
-	Task        models.Task
-	BackupCount int64
-	Expected    int64
-	Ready       bool
-	LastBackup  time.Time
-}
-
-// IsOK returns whether the task is in an OK state
-func (s TaskStatus) IsOK() bool {
-	return !s.Ready || s.Expected <= s.BackupCount
-}
-
-// TaskHasBackups returns if the task has any backups at all
-func (s TaskStatus) TaskHasBackups() bool {
-	return !s.LastBackup.IsZero()
-}
+// Day represents a duration of 24 hours. Defined for convenience
+const Day = 24 * time.Hour
 
 // Report represents the results of performing a check on all tasks
 type Report struct {
@@ -35,14 +15,15 @@ type Report struct {
 	statuses  []TaskStatus
 }
 
-func newReport(timestamp time.Time) Report {
+// NewReport instances a new Report
+func NewReport(timestamp time.Time) Report {
 	return Report{
 		Timestamp: timestamp,
 	}
 }
 
 // Got tracks a task with the given backup stats
-func (r *Report) Got(task models.Task, stats backupStats) {
+func (r *Report) Got(task models.Task, stats BackupStats) {
 	expectedBackupCount := int64(task.Datapoints - task.Tolerance)
 	status := TaskStatus{
 		Task:        task,
@@ -55,7 +36,7 @@ func (r *Report) Got(task models.Task, stats backupStats) {
 }
 
 func (r Report) isReady(task models.Task) bool {
-	daysUntilSufficientDatapoints := time.Duration(task.Datapoints) * days
+	daysUntilSufficientDatapoints := time.Duration(task.Datapoints) * Day
 	notBefore := task.CreatedAt.Add(daysUntilSufficientDatapoints)
 	return r.Timestamp.Unix() >= notBefore.Unix()
 }
@@ -80,8 +61,27 @@ func (r *Report) IsOK() bool {
 	return true
 }
 
-func getStats(task models.Task, now time.Time, db *gorm.DB) (backupStats, error) {
-	sinceOffset := time.Duration(task.Datapoints) * days
-	since := now.Add(-sinceOffset)
-	return backupsStatsByTaskID(db, task.ID, since)
+// TaskStatus represents the result of checking a task
+type TaskStatus struct {
+	Task        models.Task
+	BackupCount int64
+	Expected    int64
+	Ready       bool
+	LastBackup  time.Time
+}
+
+// IsOK returns whether the task is in an OK state
+func (s TaskStatus) IsOK() bool {
+	return !s.Ready || s.Expected <= s.BackupCount
+}
+
+// TaskHasBackups returns if the task has any backups at all
+func (s TaskStatus) TaskHasBackups() bool {
+	return !s.LastBackup.IsZero()
+}
+
+// BackupStats represents the backup stats of a given task
+type BackupStats struct {
+	CountWithinDatapoints int64
+	LastBackup            time.Time
 }

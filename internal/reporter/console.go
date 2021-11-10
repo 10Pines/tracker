@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/10Pines/tracker/v2/internal/logic"
+	"github.com/10Pines/tracker/v2/internal/shared"
 )
 
 type consoleReporter struct {
@@ -22,7 +22,7 @@ func (c consoleReporter) Name() string {
 }
 
 // Process prints the report results using STDOUT
-func (c consoleReporter) Process(report logic.Report) error {
+func (c consoleReporter) Process(report shared.Report) error {
 	log.Println("------Status report------")
 	log.Printf("Report[timestamp=%s, tasks=%d]", report.Timestamp.Format(time.RFC3339), report.TaskCount())
 	for _, taskStatus := range report.Statuses() {
@@ -32,7 +32,7 @@ func (c consoleReporter) Process(report logic.Report) error {
 	return nil
 }
 
-func status(taskStatus logic.TaskStatus) string {
+func status(taskStatus shared.TaskStatus) string {
 	if !taskStatus.Ready {
 		return fmt.Sprintf("INSUFFICIENT_DATAPOINTS[%d/%d]", taskStatus.BackupCount, taskStatus.Task.Datapoints)
 	}
