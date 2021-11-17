@@ -1,6 +1,7 @@
 package http
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -18,8 +19,16 @@ type createTask struct {
 	Tolerance  int    `json:"tolerance" validate:"gte=0"`
 }
 
+type notifyCriteria string
+
+const (
+	always  notifyCriteria = "ALWAYS"
+	onError notifyCriteria = "ON_ERROR"
+	never   notifyCriteria = "NEVER"
+)
+
 type createReport struct {
-	Notify bool `json:"notify"`
+	Notify notifyCriteria `json:"notify"`
 }
 
 // NewRouter returns a configured router with all application routes
@@ -73,17 +82,23 @@ func NewRouter(l logic.Logic, key string) *gin.Engine {
 		if err := g.BindJSON(&params); err != nil {
 			return
 		}
+		if params.Notify == "" {
+			params.Notify = never
+		}
 		now := time.Now()
 		report, err := l.CreateReport(now)
 		if err != nil {
 			respondInternalServerError(g, err)
 			return
 		}
-		if params.Notify {
+		if params.Notify == always || params.Notify == onError && !report.IsOK() {
 			if err = l.NotifyReport(report); err != nil {
 				respondInternalServerError(g, err)
 				return
 			}
+		}
+		if params.Notify == never {
+			log.Println("Skipping notification")
 		}
 		g.JSON(http.StatusOK, asJSON(report))
 	})
